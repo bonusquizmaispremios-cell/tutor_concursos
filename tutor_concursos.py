@@ -710,159 +710,163 @@ elif st.session_state.etapa == "App":
 
     with _tab_Redacao:
         st.header("✍️ Redação para Concursos")
+        _aba_r1, _aba_r2 = st.tabs(["📚 Como Fazer", "⏱️ Prática Cronometrada"])
 
-        _aba_red1, _aba_red2 = st.tabs(["📚 Como Fazer", "⏱️ Prática Cronometrada"])
-
-        with _aba_red1:
-            st.markdown("### 📚 Guia Completo de Redação para Concursos")
-            _tema_guia = st.selectbox("Tipo de redação:", [
-                "Dissertativo-argumentativa", "Texto de opinião",
-                "Redação administrativa", "Carta argumentativa",
-                "Artigo de opinião", "Carta aberta"
-            ], key="tc_guia_tipo")
-            _nivel_guia = st.selectbox("Nível:", ["Básico", "Intermediário", "Avançado"], key="tc_guia_nivel")
-            if st.button("📚 GERAR GUIA COMPLETO", key="tc_guia_btn", use_container_width=True):
+        with _aba_r1:
+            st.markdown("### 📚 Guia de Redação para Concursos")
+            _tipo_guia = st.selectbox("Tipo:", ["Dissertativo-argumentativa","Carta argumentativa","Redação administrativa"], key="tc_tipo_guia")
+            if st.button("📚 GERAR GUIA", key="tc_btn_guia", use_container_width=True):
                 with st.spinner("Gerando guia..."):
                     try:
-                        from groq import Groq as _GrRed
-                        _cli = _GrRed(api_key=st.session_state.api_key)
-                        _prompt = f"""Crie um guia COMPLETO de redação {_tema_guia} para concursos públicos, nível {_nivel_guia}.
-Inclua:
-1. ESTRUTURA — introdução, desenvolvimento (argumentos), conclusão
-2. TÉCNICAS — como construir argumentos, conectivos, coesão
-3. O QUE AVALIAM — critérios das bancas
-4. ERROS COMUNS — o que evitar
-5. EXEMPLO COMENTADO — trecho modelo com explicações
-6. DICAS PRÁTICAS — para escrever sob pressão no concurso"""
-                        _r = _cli.chat.completions.create(
+                        from groq import Groq as _Gr1
+                        _r1 = _Gr1(api_key=st.session_state.api_key).chat.completions.create(
                             model="openai/gpt-oss-120b",
-                            messages=[{"role":"user","content":_prompt}],
-                            max_tokens=3000
+                            messages=[{"role":"user","content":f"Crie um guia completo de redação {_tipo_guia} para concursos públicos. Inclua: estrutura, técnicas de argumentação, critérios das bancas, erros comuns e exemplo comentado."}],
+                            max_tokens=2500
                         )
-                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
-                    except Exception as _e:
-                        st.error(f"Erro: {_e}")
+                        st.markdown(f"<div class='card'>{_r1.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e1: st.error(f"Erro: {_e1}")
 
-        with _aba_red2:
-            st.markdown("### ⏱️ Prática com Tempo Real — 30 minutos")
+        with _aba_r2:
+            import time as _tm
 
-            if not st.session_state.get('red_ativo'):
-                st.markdown("A IA gera um tema real de concurso. Você tem **30 minutos** para escrever.")
-                _banca_red = st.selectbox("Banca:", ["CESPE/CEBRASPE","FCC","VUNESP","FGV","IBFC","Qualquer"], key="tc_red_banca")
-                _cargo_red = st.text_input("Cargo/Concurso:", placeholder="ex: Analista Judiciário, Auditor Fiscal...", key="tc_red_cargo")
-                if st.button("🎯 GERAR TEMA E INICIAR", key="tc_red_iniciar", use_container_width=True):
+            # ── ETAPA 1: Gerar tema ──
+            if not st.session_state.get('red_ativo') and not st.session_state.get('red_entregue'):
+                st.markdown("### 🎯 Prática com Tempo Real")
+                st.markdown("Clique para receber um tema aleatório de concurso. Você terá **30 minutos** para escrever.")
+                _banca = st.selectbox("Banca:", ["CESPE/CEBRASPE","FCC","VUNESP","FGV","Qualquer"], key="tc_banca_red")
+                if st.button("🎲 GERAR TEMA E INICIAR", key="tc_iniciar_red", use_container_width=True):
                     with st.spinner("Gerando tema..."):
                         try:
-                            from groq import Groq as _GrT
-                            _cli = _GrT(api_key=st.session_state.api_key)
-                            _r = _cli.chat.completions.create(
+                            from groq import Groq as _Gr2
+                            _r2 = _Gr2(api_key=st.session_state.api_key).chat.completions.create(
                                 model="openai/gpt-oss-120b",
-                                messages=[{"role":"user","content":f"Gere um tema realista de redação para concurso {_banca_red} para o cargo {_cargo_red or 'público geral'}. Inclua: TEMA, COLETÂNEA (2-3 textos motivadores curtos) e PROPOSTA DE REDAÇÃO. Seja fiel ao estilo da banca."}],
-                                max_tokens=1500
+                                messages=[{"role":"user","content":f"Gere um tema realista de redação para concurso público banca {_banca}. Inclua: TEMA (1 linha), CONTEXTO (2-3 linhas de motivação) e PROPOSTA (o que o candidato deve redigir). Seja direto e objetivo."}],
+                                max_tokens=600
                             )
-                            import time
-                            st.session_state['red_tema'] = _r.choices[0].message.content
-                            st.session_state['red_inicio'] = time.time()
-                            st.session_state['red_ativo'] = True
-                            st.session_state['red_texto'] = ''
+                            st.session_state['red_tema']     = _r2.choices[0].message.content
+                            st.session_state['red_inicio']   = _tm.time()
+                            st.session_state['red_ativo']    = True
                             st.session_state['red_entregue'] = False
+                            st.session_state['red_texto']    = ''
+                            st.session_state['red_correcao'] = ''
                             st.rerun()
-                        except Exception as _e:
-                            st.error(f"Erro: {_e}")
-            else:
-                import time as _time_red
-                _elapsed = _time_red.time() - st.session_state.get('red_inicio', _time_red.time())
+                        except Exception as _e2: st.error(f"Erro: {_e2}")
+
+            # ── ETAPA 2: Escrever com timer ──
+            elif st.session_state.get('red_ativo') and not st.session_state.get('red_entregue'):
+                _elapsed  = _tm.time() - st.session_state.get('red_inicio', _tm.time())
                 _restante = max(0, 1800 - int(_elapsed))
-                _mins = _restante // 60
-                _segs = _restante % 60
-                _cor_timer = "#22C55E" if _restante > 600 else ("#F59E0B" if _restante > 300 else "#EF4444")
+                _mins     = _restante // 60
+                _segs     = _restante % 60
+                _cor      = "#22C55E" if _restante > 900 else ("#F59E0B" if _restante > 300 else "#EF4444")
 
-                # Timer com auto-refresh a cada segundo
-                _timer_ph = st.empty()
-                _timer_ph.markdown(f"<div style='text-align:center;font-size:2.5em;font-weight:700;color:{_cor_timer};background:#F8F9FA;border-radius:12px;padding:10px;'>⏱️ {_mins:02d}:{_segs:02d}</div>", unsafe_allow_html=True)
+                # Timer grande
+                st.markdown(f"<div style='text-align:center;font-size:3em;font-weight:700;color:{_cor};background:#F8F9FA;border-radius:14px;padding:12px;margin-bottom:12px;'>⏱️ {_mins:02d}:{_segs:02d}</div>", unsafe_allow_html=True)
 
-                # Auto-rerun: a cada segundo atualiza o timer
-                if not st.session_state.get('red_entregue'):
-                    if _restante <= 0:
-                        # Tempo esgotado — entregar automaticamente
-                        st.session_state['red_entregue'] = True
-                        st.session_state['red_texto_final'] = st.session_state.get('red_texto','')
-                        st.warning("⏰ **Tempo esgotado!** Sua redação foi entregue automaticamente.")
-                        _time_red.sleep(1)
-                        st.rerun()
-                    else:
-                        _time_red.sleep(1)
-                        st.rerun()
-
+                # Tema
                 with st.expander("📋 Ver Tema", expanded=True):
                     st.markdown(st.session_state.get('red_tema',''))
 
-                if not st.session_state.get('red_entregue'):
-                    _texto_red = st.text_area("✍️ Sua redação:", height=300,
-                        value=st.session_state.get('red_texto',''),
-                        key="tc_red_texto",
-                        placeholder="Escreva sua redação aqui...")
-                    st.session_state['red_texto'] = _texto_red
+                # Campo de escrita
+                _texto = st.text_area(
+                    "✍️ Escreva sua redação aqui:",
+                    height=350,
+                    value=st.session_state.get('red_texto',''),
+                    key="tc_texto_red",
+                    placeholder="Comece sua redação aqui..."
+                )
+                st.session_state['red_texto'] = _texto
 
-                    _col1, _col2 = st.columns(2)
-                    with _col1:
-                        if st.button("📤 ENTREGAR E CORRIGIR", key="tc_red_entregar", use_container_width=True):
-                            if _texto_red.strip():
-                                st.session_state['red_entregue'] = True
-                                st.rerun()
-                            else:
-                                st.warning("Escreva sua redação antes de entregar.")
-                    with _col2:
-                        if st.button("🔄 Novo Tema", key="tc_red_novo", use_container_width=True):
-                            st.session_state['red_ativo'] = False
-                            st.rerun()
+                _palavras = len(_texto.split()) if _texto.strip() else 0
+                st.caption(f"📝 {_palavras} palavras")
 
-
+                # Encerrou o tempo — entregar automaticamente
+                if _restante <= 0:
+                    st.session_state['red_ativo']    = False
+                    st.session_state['red_entregue'] = True
+                    st.warning("⏰ Tempo esgotado! Sua redação foi entregue.")
+                    st.rerun()
                 else:
-                    st.success("✅ Redação entregue! Gerando correção...")
-                    _texto_final = st.session_state.get('red_texto_final', st.session_state.get('red_texto',''))
-                    _tema_final = st.session_state.get('red_tema','')
+                    # Auto-refresh a cada segundo
+                    _tm.sleep(1)
+                    st.rerun()
 
-                    if st.session_state.get('red_correcao'):
-                        st.markdown(f"<div class='card'>{st.session_state['red_correcao']}</div>", unsafe_allow_html=True)
-                    else:
-                        with st.spinner("Corrigindo sua redação..."):
-                            try:
-                                from groq import Groq as _GrC
-                                _cli = _GrC(api_key=st.session_state.api_key)
-                                _r = _cli.chat.completions.create(
-                                    model="openai/gpt-oss-120b",
-                                    messages=[{"role":"user","content":f"TEMA DO CONCURSO:\n{_tema_final}\n\nREDAÇÃO DO CANDIDATO:\n{_texto_final}\n\nAvalie como banca de concurso público. Critérios: 1) Adequação ao tema (0-20) 2) Estrutura e coesão (0-20) 3) Argumentação (0-20) 4) Domínio da norma culta (0-20) 5) Proposta de intervenção (0-20). NOTA TOTAL /100. Aponte erros específicos com sugestões de correção."}],
-                                    max_tokens=2000
-                                )
-                                _corr = _r.choices[0].message.content
-                                st.session_state['red_correcao'] = _corr
-                                # Salvar no histórico
-                                if 'historico_redacoes' not in st.session_state:
-                                    st.session_state['historico_redacoes'] = []
-                                import time as _t2
-                                st.session_state['historico_redacoes'].append({
-                                    'data': __import__('datetime').datetime.now().strftime('%d/%m %H:%M'),
-                                    'tema': _tema_final[:100],
-                                    'texto': _texto_final,
-                                    'correcao': _corr,
-                                    'tempo_usado': int(1800 - _restante)
-                                })
-                                st.markdown(f"<div class='card'>{_corr}</div>", unsafe_allow_html=True)
-                            except Exception as _e:
-                                st.error(f"Erro: {_e}")
+            # ── ETAPA 3: Correção e nota ──
+            elif st.session_state.get('red_entregue'):
+                st.success("✅ Redação entregue!")
 
-                    if st.button("🔄 Nova Redação", key="tc_red_nova2", use_container_width=True):
-                        for k in ['red_ativo','red_tema','red_inicio','red_texto','red_entregue','red_correcao']:
-                            st.session_state.pop(k, None)
-                        st.rerun()
+                _texto_final = st.session_state.get('red_texto','').strip()
+                _tema_final  = st.session_state.get('red_tema','')
+                _tempo_usado = int(1800 - max(0, 1800 - int(_tm.time() - st.session_state.get('red_inicio', _tm.time()))))
+                _mins_usado  = min(30, _tempo_usado // 60)
 
-                    if st.session_state.get('historico_redacoes'):
-                        st.markdown("---")
-                        st.markdown("### 📊 Histórico de Redações")
-                        for i, item in enumerate(reversed(st.session_state['historico_redacoes'][-5:])):
-                            with st.expander(f"📝 {item.get('data','')} — {item.get('tema','')[:50]}..."):
-                                st.markdown(f"**Correção:**\n{item.get('correcao','')}")
+                if not st.session_state.get('red_correcao'):
+                    with st.spinner("📊 Gerando nota e recomendações..."):
+                        try:
+                            from groq import Groq as _Gr3
+                            _prompt_corr = f"""Você é corretor de redação de concurso público. Corrija a redação abaixo com rigor de banca.
+
+TEMA:
+{_tema_final}
+
+REDAÇÃO DO CANDIDATO (tempo usado: {_mins_usado} minutos):
+{_texto_final if _texto_final else "[Candidato não escreveu nada ou o tempo esgotou sem texto]"}
+
+Forneça:
+
+📊 NOTA FINAL: __/100
+
+Critérios (0-20 cada):
+• Adequação ao tema: __/20
+• Estrutura e coesão: __/20
+• Qualidade dos argumentos: __/20
+• Domínio da norma culta: __/20
+• Proposta de intervenção: __/20
+
+✅ PONTOS FORTES (cite 2-3 aspectos positivos)
+
+❌ ERROS ENCONTRADOS (cite trechos exatos e como corrigir)
+
+💡 RECOMENDAÇÕES (3 dicas práticas para a próxima redação)
+
+📈 PARECER FINAL (1 parágrafo motivador e honesto)"""
+
+                            _r3 = _Gr3(api_key=st.session_state.api_key).chat.completions.create(
+                                model="openai/gpt-oss-120b",
+                                messages=[{"role":"user","content":_prompt_corr}],
+                                max_tokens=2000
+                            )
+                            _corr = _r3.choices[0].message.content
+                            st.session_state['red_correcao'] = _corr
+
+                            # Salvar no histórico
+                            if 'historico_redacoes' not in st.session_state:
+                                st.session_state['historico_redacoes'] = []
+                            import datetime as _dt
+                            st.session_state['historico_redacoes'].append({
+                                'data':     _dt.datetime.now().strftime('%d/%m %H:%M'),
+                                'tema':     _tema_final[:80],
+                                'texto':    _texto_final[:200],
+                                'correcao': _corr,
+                                'tempo':    _mins_usado
+                            })
+                            st.rerun()
+                        except Exception as _e3: st.error(f"Erro na correção: {_e3}")
+                else:
+                    st.markdown(f"<div class='card'>{st.session_state['red_correcao']}</div>", unsafe_allow_html=True)
+                    st.download_button("📥 Baixar correção", data=st.session_state['red_correcao'], file_name="correcao_redacao.txt", key="tc_dl_corr")
+
+                st.markdown("---")
+                if st.button("🔄 Nova Redação", key="tc_nova_red", use_container_width=True):
+                    for _k in ['red_ativo','red_entregue','red_tema','red_inicio','red_texto','red_correcao']:
+                        st.session_state.pop(_k, None)
+                    st.rerun()
+
+                if st.session_state.get('historico_redacoes'):
+                    with st.expander(f"📊 Histórico ({len(st.session_state['historico_redacoes'])} redações)"):
+                        for _item in reversed(st.session_state['historico_redacoes'][-5:]):
+                            st.markdown(f"**{_item.get('data','')}** — {_item.get('tema','')[:50]}... ({_item.get('tempo',0)}min)")
 
     with _tab_Simulado:
         st.header("🎯 Simulado — Quiz de Concurso")
