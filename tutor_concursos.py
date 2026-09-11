@@ -732,17 +732,23 @@ elif st.session_state.etapa == "App":
 
             # ── ETAPA 1: Gerar tema ──
             if not st.session_state.get('red_ativo') and not st.session_state.get('red_entregue'):
-                st.markdown("### 🎯 Prática com Tempo Real")
-                st.markdown("Clique para receber um tema aleatório de concurso. Você terá **30 minutos** para escrever.")
+                st.markdown("### 🎯 Prática Cronometrada")
+                st.markdown("A IA sorteia um tema de concurso. Escreva sua redação e clique em **Finalizar** quando terminar — a IA analisa o texto e o tempo que você levou.")
                 _banca = st.selectbox("Banca:", ["CESPE/CEBRASPE","FCC","VUNESP","FGV","Qualquer"], key="tc_banca_red")
                 if st.button("🎲 GERAR TEMA E INICIAR", key="tc_iniciar_red", use_container_width=True):
-                    with st.spinner("Gerando tema..."):
+                    with st.spinner("Sorteando tema..."):
                         try:
                             from groq import Groq as _Gr2
+                            import random as _rnd
+                            _area = _rnd.choice(['segurança pública','meio ambiente','educação','saúde',
+                                'tecnologia e sociedade','desigualdade social','mobilidade urbana',
+                                'trabalho e emprego','direitos humanos','sustentabilidade',
+                                'cultura e identidade','economia digital','envelhecimento populacional',
+                                'violência doméstica','acesso à justiça'])
                             _r2 = _Gr2(api_key=st.session_state.api_key).chat.completions.create(
                                 model="openai/gpt-oss-120b",
-                                messages=[{"role":"user","content":f"Gere um tema INÉDITO e SURPREENDENTE de redação para concurso público banca {_banca}. Escolha aleatoriamente entre estas áreas: {__import__('random').choice(['segurança pública','meio ambiente','educação','saúde','tecnologia e sociedade','desigualdade social','mobilidade urbana','trabalho e emprego','direitos humanos','sustentabilidade','cultura e identidade','economia digital','envelhecimento populacional','violência doméstica','acesso à justiça'])}. Inclua: TEMA (1 linha), CONTEXTO (2-3 linhas de motivação) e PROPOSTA (o que o candidato deve redigir). Seja direto e objetivo. Não repita temas óbvios."}],
-                                max_tokens=600
+                                messages=[{"role":"user","content":f"Gere um tema inédito de redação para concurso público banca {_banca} sobre {_area}. Inclua: TEMA (1 linha em negrito), CONTEXTO (2-3 linhas) e PROPOSTA DE REDAÇÃO (o que o candidato deve escrever). Seja objetivo."}],
+                                max_tokens=500
                             )
                             st.session_state['red_tema']     = _r2.choices[0].message.content
                             st.session_state['red_inicio']   = _tm.time()
@@ -753,142 +759,119 @@ elif st.session_state.etapa == "App":
                             st.rerun()
                         except Exception as _e2: st.error(f"Erro: {_e2}")
 
-            # ── ETAPA 2: Escrever com timer ──
+            # ── ETAPA 2: Escrever ──
             elif st.session_state.get('red_ativo') and not st.session_state.get('red_entregue'):
-                _elapsed  = _tm.time() - st.session_state.get('red_inicio', _tm.time())
-                _restante = max(0, 1800 - int(_elapsed))
-                _mins     = _restante // 60
-                _segs     = _restante % 60
-                _cor      = "#22C55E" if _restante > 900 else ("#F59E0B" if _restante > 300 else "#EF4444")
+                _elapsed = int(_tm.time() - st.session_state.get('red_inicio', _tm.time()))
+                _mins = _elapsed // 60
+                _segs = _elapsed % 60
+                st.markdown(f"<div style='text-align:center;font-size:1.6em;font-weight:700;color:#64748B;background:#F8F9FA;border-radius:10px;padding:8px;margin-bottom:12px;'>⏱️ {_mins:02d}:{_segs:02d}</div>", unsafe_allow_html=True)
 
-                # Timer grande
-                st.markdown(f"<div style='text-align:center;font-size:3em;font-weight:700;color:{_cor};background:#F8F9FA;border-radius:14px;padding:12px;margin-bottom:12px;'>⏱️ {_mins:02d}:{_segs:02d}</div>", unsafe_allow_html=True)
-
-                # Tema
-                with st.expander("📋 Ver Tema", expanded=True):
+                with st.expander("📋 Tema", expanded=True):
                     st.markdown(st.session_state.get('red_tema',''))
 
-                # Campo de escrita com contador de palavras via JS
                 _texto = st.text_area(
-                    "✍️ Escreva sua redação aqui:",
-                    height=350,
+                    "✍️ Escreva sua redação:",
+                    height=380,
                     value=st.session_state.get('red_texto',''),
                     key="tc_texto_red",
-                    placeholder="Comece sua redação aqui..."
+                    placeholder="Escreva aqui sua redação..."
                 )
                 st.session_state['red_texto'] = _texto
 
-                # Contador de palavras em tempo real via JavaScript
-                st.markdown("""
-                <div id="word-counter" style="font-size:0.85em;color:#64748B;margin-top:4px;">📝 <span id="wc">0</span> palavras</div>
-                <script>
-                (function() {
-                    function countWords() {
-                        var areas = window.parent.document.querySelectorAll('textarea');
-                        var area = null;
-                        for (var i = 0; i < areas.length; i++) {
-                            if (areas[i].value.length > 10) { area = areas[i]; break; }
-                        }
-                        if (!area) { area = areas[areas.length - 1]; }
-                        if (area) {
-                            var txt = area.value.trim();
-                            var words = txt.split(/[ \t\n\r]+/).filter(function(w){return w.length>0;}); var count = words.length;
-                            var el = document.getElementById('wc');
-                            if (el) el.textContent = count;
-                        }
-                    }
-                    setInterval(countWords, 300);
-                    window.parent.document.addEventListener('input', countWords);
-                })();
-                </script>
-                """, unsafe_allow_html=True)
+                # Contador de palavras em tempo real via JS
+                st.markdown("""<div id="wc-bar" style="font-size:0.83em;color:#64748B;margin:-8px 0 12px 2px;">📝 <span id="wc-n">0</span> palavras</div>
+                <script>(function(){function cnt(){var a=window.parent.document.querySelectorAll('textarea'),t=null;
+                for(var i=0;i<a.length;i++){if(a[i].value.length>5){t=a[i];break;}}
+                if(!t)t=a[a.length-1];if(t){var v=t.value.trim();
+                var n=v===''?0:v.split(/[ \t\n\r]+/).filter(function(w){return w.length>0;}).length;
+                var el=document.getElementById('wc-n');if(el)el.textContent=n;}}
+                setInterval(cnt,300);window.parent.document.addEventListener('input',cnt);})();
+                </script>""", unsafe_allow_html=True)
 
-                # Encerrou o tempo — entregar automaticamente
-                if _restante <= 0:
-                    st.session_state['red_ativo']    = False
-                    st.session_state['red_entregue'] = True
-                    st.warning("⏰ Tempo esgotado! Sua redação foi entregue.")
-                    st.rerun()
-                else:
-                    # Auto-refresh só para o timer (não interrompe digitação)
-                    _tm.sleep(1)
-                    st.rerun()
+                st.markdown("<hr style='margin:8px 0'>", unsafe_allow_html=True)
 
-            # ── ETAPA 3: Correção e nota ──
+                if st.button("✅ FINALIZAR E RECEBER NOTA", key="tc_finalizar_red", use_container_width=True):
+                    if _texto.strip():
+                        st.session_state['red_tempo_total'] = _elapsed
+                        st.session_state['red_ativo']       = False
+                        st.session_state['red_entregue']    = True
+                        st.rerun()
+                    else:
+                        st.warning("Escreva algo antes de finalizar.")
+
+            # ── ETAPA 3: Nota e análise ──
             elif st.session_state.get('red_entregue'):
-                st.success("✅ Redação entregue!")
-
                 _texto_final = st.session_state.get('red_texto','').strip()
                 _tema_final  = st.session_state.get('red_tema','')
-                _tempo_usado = int(1800 - max(0, 1800 - int(_tm.time() - st.session_state.get('red_inicio', _tm.time()))))
-                _mins_usado  = min(30, _tempo_usado // 60)
+                _tempo_seg   = st.session_state.get('red_tempo_total', 0)
+                _mins_f      = _tempo_seg // 60
+                _segs_f      = _tempo_seg % 60
+
+                st.success(f"✅ Redação finalizada em **{_mins_f}min {_segs_f}s**")
 
                 if not st.session_state.get('red_correcao'):
-                    with st.spinner("📊 Gerando nota e recomendações..."):
+                    with st.spinner("📊 Analisando sua redação..."):
                         try:
                             from groq import Groq as _Gr3
-                            _prompt_corr = f"""Você é corretor de redação de concurso público. Corrija a redação abaixo com rigor de banca.
+                            _palavras = len(_texto_final.split())
+                            _corr = _Gr3(api_key=st.session_state.api_key).chat.completions.create(
+                                model="openai/gpt-oss-120b",
+                                messages=[{"role":"user","content":f"""Você é corretor oficial de concurso público. Avalie a redação abaixo.
 
 TEMA:
 {_tema_final}
 
-REDAÇÃO DO CANDIDATO (tempo usado: {_mins_usado} minutos):
-{_texto_final if _texto_final else "[Candidato não escreveu nada ou o tempo esgotou sem texto]"}
+REDAÇÃO ({_palavras} palavras, tempo: {_mins_f}min {_segs_f}s):
+{_texto_final}
 
-Forneça:
+Forneça a análise completa:
 
 📊 NOTA FINAL: __/100
 
 Critérios (0-20 cada):
 • Adequação ao tema: __/20
-• Estrutura e coesão: __/20
+• Estrutura e coesão: __/20  
 • Qualidade dos argumentos: __/20
 • Domínio da norma culta: __/20
 • Proposta de intervenção: __/20
 
-✅ PONTOS FORTES (cite 2-3 aspectos positivos)
+⏱️ ANÁLISE DO TEMPO: Comente se {_mins_f} minutos foi adequado para {_palavras} palavras e o nível de elaboração apresentado.
 
-❌ ERROS ENCONTRADOS (cite trechos exatos e como corrigir)
+✅ PONTOS FORTES: (liste 2-3)
 
-💡 RECOMENDAÇÕES (3 dicas práticas para a próxima redação)
+❌ ERROS: (cite trechos exatos e corrija)
 
-📈 PARECER FINAL (1 parágrafo motivador e honesto)"""
+💡 RECOMENDAÇÕES: (3 dicas práticas para próxima redação)
 
-                            _r3 = _Gr3(api_key=st.session_state.api_key).chat.completions.create(
-                                model="openai/gpt-oss-120b",
-                                messages=[{"role":"user","content":_prompt_corr}],
+📈 PARECER FINAL: (1 parágrafo honesto e motivador)"""}],
                                 max_tokens=2000
-                            )
-                            _corr = _r3.choices[0].message.content
+                            ).choices[0].message.content
                             st.session_state['red_correcao'] = _corr
-
-                            # Salvar no histórico
                             if 'historico_redacoes' not in st.session_state:
                                 st.session_state['historico_redacoes'] = []
                             import datetime as _dt
                             st.session_state['historico_redacoes'].append({
-                                'data':     _dt.datetime.now().strftime('%d/%m %H:%M'),
-                                'tema':     _tema_final[:80],
-                                'texto':    _texto_final[:200],
-                                'correcao': _corr,
-                                'tempo':    _mins_usado
+                                'data':    _dt.datetime.now().strftime('%d/%m %H:%M'),
+                                'tema':    _tema_final[:80],
+                                'tempo':   f"{_mins_f}min {_segs_f}s",
+                                'palavras': _palavras,
+                                'correcao': _corr
                             })
                             st.rerun()
-                        except Exception as _e3: st.error(f"Erro na correção: {_e3}")
+                        except Exception as _e3: st.error(f"Erro: {_e3}")
                 else:
                     st.markdown(f"<div class='card'>{st.session_state['red_correcao']}</div>", unsafe_allow_html=True)
                     st.download_button("📥 Baixar correção", data=st.session_state['red_correcao'], file_name="correcao_redacao.txt", key="tc_dl_corr")
 
-                st.markdown("---")
                 if st.button("🔄 Nova Redação", key="tc_nova_red", use_container_width=True):
-                    for _k in ['red_ativo','red_entregue','red_tema','red_inicio','red_texto','red_correcao']:
+                    for _k in ['red_ativo','red_entregue','red_tema','red_inicio','red_texto','red_correcao','red_tempo_total']:
                         st.session_state.pop(_k, None)
                     st.rerun()
 
                 if st.session_state.get('historico_redacoes'):
                     with st.expander(f"📊 Histórico ({len(st.session_state['historico_redacoes'])} redações)"):
                         for _item in reversed(st.session_state['historico_redacoes'][-5:]):
-                            st.markdown(f"**{_item.get('data','')}** — {_item.get('tema','')[:50]}... ({_item.get('tempo',0)}min)")
+                            st.markdown(f"**{_item.get('data','')}** — {_item.get('tema','')[:50]}... — {_item.get('tempo','')} — {_item.get('palavras',0)} palavras")
 
     with _tab_Simulado:
         st.header("🎯 Simulado — Quiz de Concurso")
