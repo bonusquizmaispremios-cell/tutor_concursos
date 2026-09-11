@@ -761,25 +761,26 @@ elif st.session_state.etapa == "App":
 
             # ── ETAPA 2: Escrever ──
             elif st.session_state.get('red_ativo') and not st.session_state.get('red_entregue'):
-                _inicio_ts = int(st.session_state.get('red_inicio', 0) * 1000)
-                st.markdown(f"""
-                <div id="timer-box" style="text-align:center;font-size:1.8em;font-weight:700;color:#64748B;background:#F8F9FA;border-radius:10px;padding:8px;margin-bottom:12px;">⏱️ <span id="timer-val">00:00</span></div>
+                # Timer via JS usando components — roda no browser sem rerun
+                import streamlit.components.v1 as _comp
+                _inicio_ts = int(st.session_state.get('red_inicio', _tm.time()) * 1000)
+                _comp.html(f"""
+                <div style="text-align:center;font-size:2em;font-weight:700;color:#64748B;
+                     background:#F8F9FA;border-radius:10px;padding:8px;margin-bottom:4px;
+                     font-family:monospace;">
+                  ⏱️ <span id="tv">00:00</span>
+                </div>
                 <script>
-                (function(){{
-                    var start = {_inicio_ts};
-                    function tick(){{
-                        var now = Date.now();
-                        var elapsed = Math.floor((now - start) / 1000);
-                        var m = Math.floor(elapsed / 60);
-                        var s = elapsed % 60;
-                        var el = document.getElementById('timer-val');
-                        if(el) el.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-                    }}
-                    tick();
-                    setInterval(tick, 1000);
-                }})();
+                var s0 = {_inicio_ts};
+                function tick(){{
+                    var e = Math.floor((Date.now()-s0)/1000);
+                    var m = Math.floor(e/60), ss = e%60;
+                    var el = document.getElementById('tv');
+                    if(el) el.textContent=(m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;
+                }}
+                tick(); setInterval(tick,500);
                 </script>
-                """, unsafe_allow_html=True)
+                """, height=70)
                 _elapsed = int(_tm.time() - st.session_state.get('red_inicio', _tm.time()))
 
                 with st.expander("📋 Tema", expanded=True):
