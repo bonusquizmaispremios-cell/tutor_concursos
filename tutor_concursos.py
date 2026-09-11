@@ -768,7 +768,7 @@ elif st.session_state.etapa == "App":
                 with st.expander("📋 Ver Tema", expanded=True):
                     st.markdown(st.session_state.get('red_tema',''))
 
-                # Campo de escrita
+                # Campo de escrita com contador de palavras via JS
                 _texto = st.text_area(
                     "✍️ Escreva sua redação aqui:",
                     height=350,
@@ -778,8 +778,30 @@ elif st.session_state.etapa == "App":
                 )
                 st.session_state['red_texto'] = _texto
 
-                _palavras = len(_texto.split()) if _texto.strip() else 0
-                st.caption(f"📝 {_palavras} palavras")
+                # Contador de palavras em tempo real via JavaScript
+                st.markdown("""
+                <div id="word-counter" style="font-size:0.85em;color:#64748B;margin-top:4px;">📝 <span id="wc">0</span> palavras</div>
+                <script>
+                (function() {
+                    function countWords() {
+                        var areas = window.parent.document.querySelectorAll('textarea');
+                        var area = null;
+                        for (var i = 0; i < areas.length; i++) {
+                            if (areas[i].value.length > 10) { area = areas[i]; break; }
+                        }
+                        if (!area) { area = areas[areas.length - 1]; }
+                        if (area) {
+                            var txt = area.value.trim();
+                            var words = txt.split(/[ \t\n\r]+/).filter(function(w){return w.length>0;}); var count = words.length;
+                            var el = document.getElementById('wc');
+                            if (el) el.textContent = count;
+                        }
+                    }
+                    setInterval(countWords, 300);
+                    window.parent.document.addEventListener('input', countWords);
+                })();
+                </script>
+                """, unsafe_allow_html=True)
 
                 # Encerrou o tempo — entregar automaticamente
                 if _restante <= 0:
@@ -788,7 +810,7 @@ elif st.session_state.etapa == "App":
                     st.warning("⏰ Tempo esgotado! Sua redação foi entregue.")
                     st.rerun()
                 else:
-                    # Auto-refresh a cada segundo
+                    # Auto-refresh só para o timer (não interrompe digitação)
                     _tm.sleep(1)
                     st.rerun()
 
