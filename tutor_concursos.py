@@ -777,7 +777,22 @@ Inclua:
                 _segs = _restante % 60
                 _cor_timer = "#22C55E" if _restante > 600 else ("#F59E0B" if _restante > 300 else "#EF4444")
 
-                st.markdown(f"<div style='text-align:center;font-size:2em;font-weight:700;color:{_cor_timer};'>⏱️ {_mins:02d}:{_segs:02d}</div>", unsafe_allow_html=True)
+                # Timer com auto-refresh a cada segundo
+                _timer_ph = st.empty()
+                _timer_ph.markdown(f"<div style='text-align:center;font-size:2.5em;font-weight:700;color:{_cor_timer};background:#F8F9FA;border-radius:12px;padding:10px;'>⏱️ {_mins:02d}:{_segs:02d}</div>", unsafe_allow_html=True)
+
+                # Auto-rerun: a cada segundo atualiza o timer
+                if not st.session_state.get('red_entregue'):
+                    if _restante <= 0:
+                        # Tempo esgotado — entregar automaticamente
+                        st.session_state['red_entregue'] = True
+                        st.session_state['red_texto_final'] = st.session_state.get('red_texto','')
+                        st.warning("⏰ **Tempo esgotado!** Sua redação foi entregue automaticamente.")
+                        _time_red.sleep(1)
+                        st.rerun()
+                    else:
+                        _time_red.sleep(1)
+                        st.rerun()
 
                 with st.expander("📋 Ver Tema", expanded=True):
                     st.markdown(st.session_state.get('red_tema',''))
@@ -802,13 +817,10 @@ Inclua:
                             st.session_state['red_ativo'] = False
                             st.rerun()
 
-                    if _restante == 0:
-                        st.warning("⏰ Tempo esgotado!")
-                        st.session_state['red_entregue'] = True
-                        st.rerun()
+
                 else:
                     st.success("✅ Redação entregue! Gerando correção...")
-                    _texto_final = st.session_state.get('red_texto','')
+                    _texto_final = st.session_state.get('red_texto_final', st.session_state.get('red_texto',''))
                     _tema_final = st.session_state.get('red_tema','')
 
                     if st.session_state.get('red_correcao'):
