@@ -741,7 +741,7 @@ elif st.session_state.etapa == "App":
                             from groq import Groq as _Gr2
                             _r2 = _Gr2(api_key=st.session_state.api_key).chat.completions.create(
                                 model="openai/gpt-oss-120b",
-                                messages=[{"role":"user","content":f"Gere um tema realista de redação para concurso público banca {_banca}. Inclua: TEMA (1 linha), CONTEXTO (2-3 linhas de motivação) e PROPOSTA (o que o candidato deve redigir). Seja direto e objetivo."}],
+                                messages=[{"role":"user","content":f"Gere um tema INÉDITO e SURPREENDENTE de redação para concurso público banca {_banca}. Escolha aleatoriamente entre estas áreas: {__import__('random').choice(['segurança pública','meio ambiente','educação','saúde','tecnologia e sociedade','desigualdade social','mobilidade urbana','trabalho e emprego','direitos humanos','sustentabilidade','cultura e identidade','economia digital','envelhecimento populacional','violência doméstica','acesso à justiça'])}. Inclua: TEMA (1 linha), CONTEXTO (2-3 linhas de motivação) e PROPOSTA (o que o candidato deve redigir). Seja direto e objetivo. Não repita temas óbvios."}],
                                 max_tokens=600
                             )
                             st.session_state['red_tema']     = _r2.choices[0].message.content
