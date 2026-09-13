@@ -227,9 +227,21 @@ def gerar_json_sessao():
     return json.dumps(dados, ensure_ascii=False, indent=2, default=str)
 
 def carregar_json_sessao(dados):
-    for k in CHAVES_SALVAR:
-        if k in dados:
-            st.session_state[k] = dados[k]
+    _bloq = {'api_key','etapa','nome_login','chave_login','upload_login','btn_entrar_login'}
+    _pref = (
+        'btn_','sel_','ul_','dl_','cad_','_sub','_sm','_tab','_bsc',
+        'ativo_','rem_','sel_pet_','ev_','prof_','hig_','prev_',
+        'vac_','sint_','comp_','trad_','subs_','amb_','viag_','chat_',
+        'duvida_','emerg_','peso_','data_','obs_','tipo_','vet_','desc_',
+        'local_','prox_','alim','sit_emerg_','tc_','oraf','siau','agmag',
+        'lv','mv','pt','pi','sh','wc','rv','rp','rc',
+    )
+    import re as _re
+    for k, v in dados.items():
+        if k in _bloq: continue
+        if any(k.startswith(p) for p in _pref): continue
+        if _re.match(r'.+_\d+$', k): continue
+        st.session_state[k] = v
 
 def salvar_perfil_cache(u):
     _cache["perfis"][u] = {k: st.session_state.get(k) for k in CHAVES_SALVAR}
@@ -436,7 +448,7 @@ if 'red_ativo' not in st.session_state: st.session_state['red_ativo'] = False
 
 if st.session_state.etapa == "Login":
     st.markdown("# 🤖 TUTOR DE CONCURSOS IA")
-    st.markdown("<div class=\'card\'><b>🔒 ACESSO RESTRITO A CLIENTES DO QUIZ COM PRÊMIOS</b><br>🔗 quizcompremios.com.br</div>", unsafe_allow_html=True)
+    st.markdown("<div class=\'card\'><b>🔒 ACESSO RESTRITO A CLIENTES DO QUIZ COM PRÊMIOS</b><br>🔗 <a href='https://quizcompremios.com.br' target='_blank' style='color:#4F46E5;font-weight:700;text-decoration:underline;'>quizcompremios.com.br</a></div>", unsafe_allow_html=True)
     st.info("💻 **Dica:** Pela complexidade dos agentes, no computador a experiência é mais agradável.")
     with st.container():
         nome  = st.text_input("Seu Nome:", key="nome_login")
@@ -462,6 +474,27 @@ elif st.session_state.etapa == "App":
 
     # TABS — navegação nativa
     (_tab_Home, _tab_Questoes, _tab_Redacao, _tab_Simulado, _tab_Cronograma, _tab_Flashcards, _tab_Progresso, _tab_Legislacao, _tab_Informatica, _tab_Portugues, _tab_Matematica, _tab_Atualidades) = st.tabs(['🏠 Painel', '📝 Questões', '✍️ Redação', '🎯 Simulado', '📅 Cronograma', '🃏 Flashcards', '📈 Progresso', '⚖️ Legislação', '💻 Informática', '📖 Português', '🔢 Matemática', '📰 Atualidades'])
+
+    # ── BARRA SALVAR — aparece em todas as abas ──
+    with st.expander("💾 Salvar / Carregar meus dados", expanded=False):
+        _bsc1, _bsc2 = st.columns(2)
+        with _bsc1:
+            import json as _jsv
+            _dsv = {k: st.session_state.get(k) for k in list(st.session_state.keys()) if not k.startswith('_') and k not in ('api_key',)}
+            st.download_button("💾 Baixar meus dados (.json)",
+                data=_jsv.dumps(_dsv, ensure_ascii=False, indent=2, default=str),
+                file_name=f"dados_{st.session_state.get('usuario','user')}.json",
+                mime="application/json", key="dl_barra_sv_tutorcon")
+        with _bsc2:
+            _fupsv = st.file_uploader("📂 Carregar dados salvos:", type=["json"], key="ul_barra_sv_tutorcon", label_visibility="collapsed")
+            if _fupsv:
+                try:
+                    import json as _jld
+                    for _k2,_v2 in _jld.loads(_fupsv.read().decode()).items():
+                        if _k2 not in ('api_key','etapa'): st.session_state[_k2] = _v2
+                    st.success("✅ Dados restaurados!"); st.rerun()
+                except: st.error("Arquivo inválido.")
+
 
     with _tab_Home:
         col_u, col_r = st.columns([3,1])
@@ -591,6 +624,7 @@ elif st.session_state.etapa == "App":
                             f"💡 Por que essa missão hoje: [1 linha explicando a estratégia]"
                         )
                         missao = tutor_ia(missao_prompt)
+                        if missao: st.session_state['res_home_tutorc1'] = str(missao)
                         st.session_state.missao_hoje = missao
                         st.rerun()
             else:
@@ -641,6 +675,27 @@ elif st.session_state.etapa == "App":
         # PAINEL EXECUTIVO
         # ──────────────────────────────────────────
 
+        st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+        st.markdown("### 💾 Salvar e Carregar Dados")
+        _csl1, _csl2 = st.columns(2)
+        with _csl1:
+            import json as _json_sv
+            _dados_sv = {k: st.session_state.get(k) for k in list(st.session_state.keys()) if not k.startswith('_')}
+            st.download_button("💾 Salvar dados (.json)",
+                data=_json_sv.dumps(_dados_sv, ensure_ascii=False, indent=2, default=str),
+                file_name=f"dados_{st.session_state.get('usuario','user')}.json",
+                mime="application/json", key="dl_sv_tutorcon")
+        with _csl2:
+            _arq_sv = st.file_uploader("📂 Carregar dados:", type=["json"], key="ul_sv_tutorcon")
+            if _arq_sv:
+                try:
+                    import json as _json_ld
+                    for _k, _v in _json_ld.loads(_arq_sv.read().decode()).items():
+                        st.session_state[_k] = _v
+                    st.success("✅ Dados carregados!")
+                    st.rerun()
+                except: st.error("Arquivo inválido.")
+
     with _tab_Questoes:
         st.header("❓ Simulado de Questões")
         st.markdown("Questões no estilo da banca — com gabarito comentado e explicação detalhada.")
@@ -678,6 +733,7 @@ elif st.session_state.etapa == "App":
                         f"- Explicações claras e educativas"
                     )
                     res = tutor_ia(prompt)
+                    if res: st.session_state['res_questoes_tutorc2'] = str(res)
                     salvar_estudo("Simulado", f"{materia_q} — {tema_q}", res)
                     st.session_state.questoes_respondidas += qtd_q
                     st.session_state['simulado_temp'] = res
