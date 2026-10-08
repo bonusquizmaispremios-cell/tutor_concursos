@@ -485,7 +485,7 @@ elif st.session_state.etapa == "App":
 
 
     # TABS — navegação nativa
-    (_tab_Home, _tab_Questoes, _tab_Redacao, _tab_Simulado, _tab_Cronograma, _tab_Flashcards, _tab_Progresso, _tab_Legislacao, _tab_Informatica, _tab_Portugues, _tab_Matematica, _tab_Atualidades) = st.tabs(['🏠 Painel', '📝 Questões', '✍️ Redação', '🎯 Simulado', '📅 Cronograma', '🃏 Flashcards', '📈 Progresso', '⚖️ Legislação', '💻 Informática', '📖 Português', '🔢 Matemática', '📰 Atualidades'])
+    (_tab_Home, _tab_Questoes, _tab_Redacao, _tab_Simulado, _tab_Cronograma, _tab_Flashcards, _tab_Progresso, _tab_Legislacao, _tab_Informatica, _tab_Portugues, _tab_Matematica, _tab_Atualidades, _tab_DirConst, _tab_DirAdmin, _tab_Logico, _tab_DirPenal, _tab_DirProc, _tab_Bancario, _tab_Contabil, _tab_Geo, _tab_Hist, _tab_Especifico) = st.tabs(['🏠 Painel', '📝 Questões', '✍️ Redação', '🎯 Simulado', '📅 Cronograma', '🃏 Flashcards', '📈 Progresso', '⚖️ Legislação', '💻 Informática', '📖 Português', '🔢 Matemática', '📰 Atualidades', '📜 Dir. Constitucional', '🏛️ Dir. Administrativo', '🧠 Raciocínio Lógico', '🚔 Dir. Penal', '⚖️ Dir. Processual', '💰 Conh. Bancários', '📊 Contabilidade', '🌍 Geografia', '🕰️ História', '🎯 Conh. Específicos'])
 
     # ── BARRA SALVAR — aparece em todas as abas ──
     with st.expander("💾 Salvar / Carregar meus dados", expanded=False):
@@ -1318,7 +1318,235 @@ Responda APENAS em JSON válido, sem texto extra:
 
 
     with _tab_Atualidades:
-        pass
+        st.header("📰 Atualidades")
+        st.markdown("*Fique por dentro dos principais fatos nacionais e internacionais cobrados em concursos.*")
+        _prompt_atual = st.text_area("Descreva o tema ou peça um resumo de atualidades:", height=120, key="tutorc_atual_in", placeholder="Ex: Resumo das principais notícias de 2024, eventos geopolíticos recentes, reformas legislativas...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_atual_btn", use_container_width=True):
+            if _prompt_atual.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_atual}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_DirConst:
+        st.header("📜 Direito Constitucional")
+        st.markdown("*Estude a Constituição Federal, direitos fundamentais, organização do Estado e controle de constitucionalidade.*")
+        _prompt_dirconst = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_dirconst_in", placeholder="Ex: Explique os princípios fundamentais da CF/88, direitos e garantias fundamentais, processo legislativo...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_dirconst_btn", use_container_width=True):
+            if _prompt_dirconst.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_dirconst}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_DirAdmin:
+        st.header("🏛️ Direito Administrativo")
+        st.markdown("*Domine os princípios da administração pública, atos administrativos, licitações, contratos e responsabilidade civil do Estado.*")
+        _prompt_diradm = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_diradm_in", placeholder="Ex: Princípios da administração pública (LIMPE), licitações Lei 14.133/21, contratos administrativos...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_diradm_btn", use_container_width=True):
+            if _prompt_diradm.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_diradm}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_Logico:
+        st.header("🧠 Raciocínio Lógico")
+        st.markdown("*Treine lógica proposicional, argumentativa, analítica, sequências, diagramas e raciocínio quantitativo.*")
+        _prompt_logico = st.text_area("Descreva sua dúvida ou peça exercícios:", height=120, key="tutorc_logico_in", placeholder="Ex: Me explique lógica proposicional, resolva sequências numéricas, tabela verdade, silogismos...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_logico_btn", use_container_width=True):
+            if _prompt_logico.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_logico}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_DirPenal:
+        st.header("🚔 Direito Penal")
+        st.markdown("*Estude os princípios do direito penal, crimes em espécie, penas, extinção da punibilidade e legislação especial.*")
+        _prompt_dirpenal = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_dirpenal_in", placeholder="Ex: Princípios do direito penal, crimes contra a administração pública, lei de drogas, estatuto do desarmamento...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_dirpenal_btn", use_container_width=True):
+            if _prompt_dirpenal.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_dirpenal}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_DirProc:
+        st.header("⚖️ Direito Processual")
+        st.markdown("*Domine o processo civil e penal: princípios, competência, recursos, execução e procedimentos especiais.*")
+        _prompt_dirproc = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_dirproc_in", placeholder="Ex: Processo civil (CPC), processo penal (CPP), recursos, execução, tutela de urgência...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_dirproc_btn", use_container_width=True):
+            if _prompt_dirproc.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_dirproc}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_Bancario:
+        st.header("💰 Conhecimentos Bancários e Financeiros")
+        st.markdown("*Estude o sistema financeiro nacional, produtos bancários, mercado de capitais e matemática financeira.*")
+        _prompt_banc = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_banc_in", placeholder="Ex: Sistema Financeiro Nacional, Banco Central, mercado de câmbio, produtos bancários, matemática financeira...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_banc_btn", use_container_width=True):
+            if _prompt_banc.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_banc}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_Contabil:
+        st.header("📊 Contabilidade")
+        st.markdown("*Estude contabilidade geral e pública: balanço patrimonial, DRE, escrituração e orçamento público.*")
+        _prompt_cont = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_cont_in", placeholder="Ex: Balanço patrimonial, DRE, plano de contas, contabilidade pública, orçamento federal...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_cont_btn", use_container_width=True):
+            if _prompt_cont.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_cont}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_Geo:
+        st.header("🌍 Geografia")
+        st.markdown("*Estude geografia do Brasil e do mundo: regiões, clima, relevo, hidrografia, geopolítica e meio ambiente.*")
+        _prompt_geo = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_geo_in", placeholder="Ex: Regiões brasileiras, biomas, hidrografia, geopolítica mundial, questões ambientais...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_geo_btn", use_container_width=True):
+            if _prompt_geo.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_geo}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_Hist:
+        st.header("🕰️ História")
+        st.markdown("*Estude história do Brasil e geral: períodos coloniais, império, república, história contemporânea e eventos mundiais.*")
+        _prompt_hist = st.text_area("Descreva sua dúvida ou peça explicação sobre o tema:", height=120, key="tutorc_hist_in", placeholder="Ex: História do Brasil colonial, período imperial, república velha, Segunda Guerra Mundial, Guerra Fria...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_hist_btn", use_container_width=True):
+            if _prompt_hist.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_hist}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
+
+    with _tab_Especifico:
+        st.header("🎯 Conhecimentos Específicos")
+        st.markdown("*Área específica do cargo: administração, economia, engenharia, medicina, direito, tecnologia e outros. Diga qual é sua área!*")
+        _prompt_espec = st.text_area("Informe sua área e a dúvida:", height=120, key="tutorc_espec_in", placeholder="Ex: Sou candidato para auditor fiscal — me explique crédito tributário. / Área: TI — explique redes de computadores para concurso...")
+        if st.button("🤖 GERAR COM IA", key="tutorc_espec_btn", use_container_width=True):
+            if _prompt_espec.strip():
+                with st.spinner("Analisando..."):
+                    try:
+                        from groq import Groq as _GrT
+                        _cli = _GrT(api_key=st.session_state.api_key)
+                        _r = _cli.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role":"user","content":_prompt_espec}],
+                            max_tokens=2048
+                        )
+                        st.markdown(f"<div class='card'>{_r.choices[0].message.content}</div>", unsafe_allow_html=True)
+                    except Exception as _e:
+                        st.error(f"Erro: {_e}")
+            else:
+                st.warning("Preencha o campo acima.")
 
 # --- RODAPÉ ---
 st.markdown(
